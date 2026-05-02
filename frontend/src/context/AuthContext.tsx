@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Restore session from Supabase on mount
+    // Restore session from Supabase on mount; fall back to localStorage token
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.access_token) {
         const t = session.access_token;
@@ -38,21 +38,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setToken(null);
           })
           .finally(() => setLoading(false));
-      } else if (token) {
-        // Fallback: validate existing stored token via /auth/me
-        getMe()
-          .then((r) => setUser(r.data))
-          .catch(() => {
-            localStorage.removeItem("token");
-            setToken(null);
-          })
-          .finally(() => setLoading(false));
       } else {
-        setLoading(false);
+        const storedToken = localStorage.getItem("token");
+        if (storedToken) {
+          getMe()
+            .then((r) => setUser(r.data))
+            .catch(() => {
+              localStorage.removeItem("token");
+              setToken(null);
+            })
+            .finally(() => setLoading(false));
+        } else {
+          setLoading(false);
+        }
       }
     });
+  }, []);
 
-    // Listen for Supabase auth state changes
+  useEffect(() => {
+    // Subscribe to Supabase auth state changes for token refresh / sign-out
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.access_token) {
         const t = session.access_token;
@@ -73,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []); // runs once on mount — intentionally no deps to avoid re-subscribing
+  }, []);
 
   const setAuth = (t: string, u: User) => {
     localStorage.setItem("token", t);

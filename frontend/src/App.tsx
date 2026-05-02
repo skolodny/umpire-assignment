@@ -17,6 +17,7 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<Navigate to="/login" replace />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
 
         <Route

@@ -22,6 +22,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # Backfill NULL password_hash values before restoring NOT NULL constraint
+    op.execute("UPDATE users SET password_hash = '' WHERE password_hash IS NULL")
     op.alter_column("users", "password_hash", nullable=False)
     op.drop_index("ix_users_supabase_id", table_name="users")
     op.drop_column("users", "supabase_id")

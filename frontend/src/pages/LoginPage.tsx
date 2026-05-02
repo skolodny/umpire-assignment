@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || "https://umpire-assignment.onrender.com";
+import { API_BASE } from "../api";
 
 export default function LoginPage() {
   const handleSignIn = (provider: string = "google") => {

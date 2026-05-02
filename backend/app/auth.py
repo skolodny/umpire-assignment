@@ -3,6 +3,7 @@ from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.config import get_settings
 from app.database import get_db
 from app import models
@@ -39,24 +40,47 @@ def get_current_user(
 
     user = db.query(models.User).filter(models.User.supabase_id == supabase_id).first()
     if user is None:
-        # Auto-provision user on first login
         email: str = payload.get("email", "")
-        user_metadata: dict = payload.get("user_metadata", {})
-        name: str = (
-            user_metadata.get("full_name")
-            or user_metadata.get("name")
-            or email.split("@")[0]
-        )
-        user = models.User(
-            supabase_id=supabase_id,
-            email=email,
-            name=name,
-            role=models.UserRole.umpire,
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        # Link an existing user by email (migrating pre-Supabase accounts)
+        existing_by_email = db.query(models.User).filter(models.User.email == email).first()
+        if existing_by_email:
+            existing_by_email.supabase_id = supabase_id
+            try:
+                db.commit()
+                db.refresh(existing_by_email)
+            except IntegrityError:
+                db.rollback()
+                existing_by_email = db.query(models.User).filter(
+                    models.User.supabase_id == supabase_id
+                ).first()
+            user = existing_by_email
+        else:
+            # New user — provision a record from JWT claims
+            user_metadata: dict = payload.get("user_metadata", {})
+            name: str = (
+                user_metadata.get("full_name")
+                or user_metadata.get("name")
+                or email.split("@")[0]
+            )
+            new_user = models.User(
+                supabase_id=supabase_id,
+                email=email,
+                name=name,
+                role=models.UserRole.umpire,
+            )
+            db.add(new_user)
+            try:
+                db.commit()
+                db.refresh(new_user)
+            except IntegrityError:
+                db.rollback()
+                new_user = db.query(models.User).filter(
+                    models.User.supabase_id == supabase_id
+                ).first()
+            user = new_user
 
+    if user is None:
+        raise credentials_exception
     return user
 
 

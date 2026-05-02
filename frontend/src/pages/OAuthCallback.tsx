@@ -29,7 +29,7 @@ export default function OAuthCallback() {
         setError("Failed to load user profile. Please try again.");
       }
     });
-  }, []); // runs once on mount — navigate and setAuth are stable refs
+  }, [navigate, setAuth]);
 
   if (error) {
     return (
