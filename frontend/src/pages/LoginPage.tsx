@@ -1,8 +1,13 @@
-import { API_BASE } from "../api";
+import { supabase } from "../lib/supabaseClient";
 
 export default function LoginPage() {
-  const handleSignIn = (provider: string = "google") => {
-    window.location.href = `${API_BASE}/oauth/consent?provider=${provider}`;
+  const handleSignIn = async (provider: string = "google") => {
+    await supabase.auth.signInWithOAuth({
+      provider: provider as Parameters<typeof supabase.auth.signInWithOAuth>[0]["provider"],
+      options: {
+        redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}oauth/callback`,
+      },
+    });
   };
 
   return (
