@@ -36,17 +36,6 @@ class EligibleUmpire(BaseModel):
     email: str
 
 
-def _parse_division_from_title(title: str) -> Optional[models.Division]:
-    t = title.lower()
-    if "int ii" in t or "int 2" in t or "intermediate ii" in t:
-        return models.Division.int_ii
-    if "int i" in t or "int 1" in t or "intermediate i" in t:
-        return models.Division.int_i
-    if "rookie" in t:
-        return models.Division.rookies
-    return None
-
-
 @router.get("", response_model=List[GameOut])
 def list_games(
     month: Optional[str] = None,
@@ -69,15 +58,10 @@ def list_games(
 
 def _fetch_and_import_feed(
     url: str,
-    default_division: Optional[models.Division],
+    division: models.Division,
     db: Session,
 ) -> tuple[int, int]:
-    """Fetch a single iCal feed and upsert its games.
-
-    If *default_division* is provided every event in the feed is assigned that
-    division.  Otherwise the division is inferred from the event title (used for
-    the Int I / Rookies feed where both division names may appear).
-    """
+    """Fetch a single iCal feed and upsert its games, assigning *division* to every event."""
     try:
         resp = httpx.get(url, timeout=30)
         resp.raise_for_status()
@@ -118,8 +102,6 @@ def _fetch_and_import_feed(
             if hasattr(dt_end, "time"):
                 game_end = dt_end.time()
 
-        division = default_division if default_division is not None else _parse_division_from_title(summary)
-
         existing = db.query(models.Game).filter(models.Game.external_uid == uid).first()
         if existing:
             existing.title = summary
@@ -151,22 +133,29 @@ def sync_games(
     _: models.User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    if not settings.ical_feed_url_int_i_rookies and not settings.ical_feed_url_int_ii:
+    if not any([
+        settings.ical_feed_url_int_i,
+        settings.ical_feed_url_rookies,
+        settings.ical_feed_url_int_ii,
+    ]):
         raise HTTPException(
             status_code=400,
-            detail="Neither ICAL_FEED_URL_INT_I_ROOKIES nor ICAL_FEED_URL_INT_II is configured",
+            detail="No iCal feed URLs configured (ICAL_FEED_URL_INT_I, ICAL_FEED_URL_ROOKIES, ICAL_FEED_URL_INT_II)",
         )
 
     added = 0
     updated = 0
 
-    # Int I / Rookies feed – division determined from event title
-    if settings.ical_feed_url_int_i_rookies:
-        a, u = _fetch_and_import_feed(settings.ical_feed_url_int_i_rookies, None, db)
+    if settings.ical_feed_url_int_i:
+        a, u = _fetch_and_import_feed(settings.ical_feed_url_int_i, models.Division.int_i, db)
         added += a
         updated += u
 
-    # Int II feed – all events belong to Int II
+    if settings.ical_feed_url_rookies:
+        a, u = _fetch_and_import_feed(settings.ical_feed_url_rookies, models.Division.rookies, db)
+        added += a
+        updated += u
+
     if settings.ical_feed_url_int_ii:
         a, u = _fetch_and_import_feed(settings.ical_feed_url_int_ii, models.Division.int_ii, db)
         added += a

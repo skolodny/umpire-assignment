@@ -167,7 +167,8 @@ UPDATE users SET role = 'admin' WHERE email = 'admin@example.com';
 | `SMTP_USERNAME` | *(empty)* | SMTP username; if empty, emails print to stdout |
 | `SMTP_PASSWORD` | *(empty)* | SMTP password |
 | `SMTP_FROM` | `noreply@umpire.local` | From address |
-| `ICAL_FEED_URL_INT_I_ROOKIES` | *(empty)* | iCal feed URL for Int I and Rookies games |
+| `ICAL_FEED_URL_INT_I` | *(empty)* | iCal feed URL for Int I games |
+| `ICAL_FEED_URL_ROOKIES` | *(empty)* | iCal feed URL for Rookies games |
 | `ICAL_FEED_URL_INT_II` | *(empty)* | iCal feed URL for Int II games |
 | `APP_BASE_URL` | `http://localhost:3000` | Frontend URL (used in email links) |
 

@@ -13,7 +13,8 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from: str = "noreply@umpire.local"
 
-    ical_feed_url_int_i_rookies: str = ""
+    ical_feed_url_int_i: str = ""
+    ical_feed_url_rookies: str = ""
     ical_feed_url_int_ii: str = ""
     app_base_url: str = "http://localhost:3000"
 
