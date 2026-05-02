@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Umpire Assignment</title>
+    <script>
+      // Single-page app redirect for GitHub Pages.
+      // When GitHub Pages returns a 404 for a deep link, this page encodes the
+      // full path/search/hash into a query-string redirect and sends the browser
+      // back to the repo root, where index.html can decode it and hand it to
+      // React Router.  pathSegmentsToKeep=1 preserves the /umpire-assignment/
+      // project-page prefix.
+      // Technique: https://github.com/rafgraph/spa-github-pages
+      const pathSegmentsToKeep = 1;
+      const l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>
