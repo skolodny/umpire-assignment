@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // runs once on mount — intentionally no deps to avoid re-subscribing
 
   const setAuth = (t: string, u: User) => {
     localStorage.setItem("token", t);

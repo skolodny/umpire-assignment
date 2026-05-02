@@ -29,7 +29,7 @@ export default function OAuthCallback() {
         setError("Failed to load user profile. Please try again.");
       }
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // runs once on mount — navigate and setAuth are stable refs
 
   if (error) {
     return (
