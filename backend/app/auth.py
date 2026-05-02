@@ -7,10 +7,15 @@ from sqlalchemy.exc import IntegrityError
 from app.config import get_settings
 from app.database import get_db
 from app import models
+from supabase import create_client
 
 settings = get_settings()
 bearer_scheme = HTTPBearer(auto_error=False)
 
+supabase = create_client(
+    settings.supabase_url,
+    settings.supabase_anon_key,
+)
 
 def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
@@ -26,21 +31,23 @@ def get_current_user(
 
     token = credentials.credentials
     try:
-        payload = jwt.decode(
-            token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
-            options={"verify_aud": False},
-        )
-        supabase_id: Optional[str] = payload.get("sub")
-        if not supabase_id:
+        user_response = supabase.auth.get_user(token)
+        auth_user = user_response.user
+
+        if not auth_user:
             raise credentials_exception
-    except JWTError:
+
+        supabase_id = auth_user.id
+        email = auth_user.email or ""
+
+        user_metadata = auth_user.user_metadata or {}
+
+    except Exception as exc:
+        print(f"[AUTH] Token validation failed: {exc}")
         raise credentials_exception
 
     user = db.query(models.User).filter(models.User.supabase_id == supabase_id).first()
     if user is None:
-        email: str = payload.get("email", "")
         # Link an existing user by email (migrating pre-Supabase accounts)
         existing_by_email = db.query(models.User).filter(models.User.email == email).first()
         if existing_by_email:
@@ -57,7 +64,6 @@ def get_current_user(
             user = existing_by_email
         else:
             # New user — provision a record from JWT claims
-            user_metadata: dict = payload.get("user_metadata", {})
             name: str = (
                 user_metadata.get("full_name")
                 or user_metadata.get("name")
