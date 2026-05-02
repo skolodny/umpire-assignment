@@ -67,19 +67,22 @@ def list_games(
     return query.order_by(models.Game.date, models.Game.start_time).all()
 
 
-@router.post("/sync", status_code=200)
-def sync_games(
-    _: models.User = Depends(require_admin),
-    db: Session = Depends(get_db),
-):
-    if not settings.ical_feed_url:
-        raise HTTPException(status_code=400, detail="ICAL_FEED_URL not configured")
+def _fetch_and_import_feed(
+    url: str,
+    default_division: Optional[models.Division],
+    db: Session,
+) -> tuple[int, int]:
+    """Fetch a single iCal feed and upsert its games.
 
+    If *default_division* is provided every event in the feed is assigned that
+    division.  Otherwise the division is inferred from the event title (used for
+    the Int I / Rookies feed where both division names may appear).
+    """
     try:
-        resp = httpx.get(settings.ical_feed_url, timeout=30)
+        resp = httpx.get(url, timeout=30)
         resp.raise_for_status()
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Failed to fetch iCal feed: {e}")
+        raise HTTPException(status_code=502, detail=f"Failed to fetch iCal feed ({url}): {e}")
 
     cal = Calendar.from_ical(resp.content)
     added = 0
@@ -115,7 +118,7 @@ def sync_games(
             if hasattr(dt_end, "time"):
                 game_end = dt_end.time()
 
-        division = _parse_division_from_title(summary)
+        division = default_division if default_division is not None else _parse_division_from_title(summary)
 
         existing = db.query(models.Game).filter(models.Game.external_uid == uid).first()
         if existing:
@@ -139,6 +142,35 @@ def sync_games(
                 imported_at=datetime.utcnow(),
             ))
             added += 1
+
+    return added, updated
+
+
+@router.post("/sync", status_code=200)
+def sync_games(
+    _: models.User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    if not settings.ical_feed_url_int_i_rookies and not settings.ical_feed_url_int_ii:
+        raise HTTPException(
+            status_code=400,
+            detail="Neither ICAL_FEED_URL_INT_I_ROOKIES nor ICAL_FEED_URL_INT_II is configured",
+        )
+
+    added = 0
+    updated = 0
+
+    # Int I / Rookies feed – division determined from event title
+    if settings.ical_feed_url_int_i_rookies:
+        a, u = _fetch_and_import_feed(settings.ical_feed_url_int_i_rookies, None, db)
+        added += a
+        updated += u
+
+    # Int II feed – all events belong to Int II
+    if settings.ical_feed_url_int_ii:
+        a, u = _fetch_and_import_feed(settings.ical_feed_url_int_ii, models.Division.int_ii, db)
+        added += a
+        updated += u
 
     db.commit()
     return {"added": added, "updated": updated}
