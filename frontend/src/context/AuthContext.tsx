@@ -39,6 +39,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           })
           .finally(() => setLoading(false));
       } else {
+        // Read from localStorage directly rather than the `token` state variable
+        // to avoid capturing a stale closure (this effect has [] deps).
         const storedToken = localStorage.getItem("token");
         if (storedToken) {
           getMe()

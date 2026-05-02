@@ -48,7 +48,8 @@ def get_current_user(
             try:
                 db.commit()
                 db.refresh(existing_by_email)
-            except IntegrityError:
+            except IntegrityError as exc:
+                print(f"[AUTH] IntegrityError linking supabase_id to existing user by email, recovering: {exc}")
                 db.rollback()
                 existing_by_email = db.query(models.User).filter(
                     models.User.supabase_id == supabase_id
@@ -72,7 +73,8 @@ def get_current_user(
             try:
                 db.commit()
                 db.refresh(new_user)
-            except IntegrityError:
+            except IntegrityError as exc:
+                print(f"[AUTH] IntegrityError provisioning new user (concurrent first-login), recovering: {exc}")
                 db.rollback()
                 new_user = db.query(models.User).filter(
                     models.User.supabase_id == supabase_id
