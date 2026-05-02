@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { getMe } from "../api";
@@ -8,15 +8,28 @@ export default function OAuthCallback() {
   const navigate = useNavigate();
   const { setAuth } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const handled = useRef(false);
 
   useEffect(() => {
+    // Surface any error returned by the OAuth provider in the redirect URL.
+    const params = new URLSearchParams(window.location.search);
+    const urlError = params.get("error_description") || params.get("error");
+    if (urlError) {
+      setError(urlError);
+      return;
+    }
+
     // onAuthStateChange handles both implicit (hash) and PKCE (code exchange) flows.
     // INITIAL_SESSION may fire first (with no session) while the PKCE code is being
     // exchanged; SIGNED_IN fires once the session is ready.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (handled.current) return;
         if (event !== "SIGNED_IN" && event !== "INITIAL_SESSION") return;
         if (!session) return;
+
+        handled.current = true;
+        subscription.unsubscribe();
 
         const accessToken = session.access_token;
         localStorage.setItem("token", accessToken);
