@@ -31,11 +31,9 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
         
-      - name: Set up Node.js 22
-        uses: actions/setup-node@v1
-        with:
-          node-version: 22
-  
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+
       - name: Clean install of dependencies
         run: npm ci
         working-directory: ./frontend
