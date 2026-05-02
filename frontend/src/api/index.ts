@@ -1,4 +1,5 @@
-import axios from "axios";
+import axios, { type InternalAxiosRequestConfig } from "axios";
+import { supabase } from "../lib/supabaseClient";
 
 export const API_BASE = import.meta.env.VITE_API_URL || "https://umpire-assignment.onrender.com";
 
@@ -13,6 +14,26 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// On 401, attempt a Supabase token refresh and retry the original request once.
+// This handles the case where the stored access token has expired between visits.
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    if (error.response?.status === 401 && !original._retry) {
+      original._retry = true;
+      const { data: { session } } = await supabase.auth.refreshSession();
+      if (session?.access_token) {
+        const newToken = session.access_token;
+        localStorage.setItem("token", newToken);
+        original.headers.Authorization = `Bearer ${newToken}`;
+        return api(original);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Auth
 export const getMe = () => api.get("/auth/me");
