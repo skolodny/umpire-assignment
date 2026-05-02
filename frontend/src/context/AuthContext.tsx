@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { supabase } from "../lib/supabaseClient";
 import { getMe } from "../api";
 
 interface User {
@@ -24,18 +25,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      getMe()
-        .then((r) => setUser(r.data))
-        .catch(() => {
-          setToken(null);
-          localStorage.removeItem("token");
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+    // Restore session from Supabase on mount; fall back to localStorage token
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.access_token) {
+        const t = session.access_token;
+        localStorage.setItem("token", t);
+        setToken(t);
+        getMe()
+          .then((r) => setUser(r.data))
+          .catch(() => {
+            localStorage.removeItem("token");
+            setToken(null);
+          })
+          .finally(() => setLoading(false));
+      } else {
+        // Read from localStorage directly rather than the `token` state variable
+        // to avoid capturing a stale closure (this effect has [] deps).
+        const storedToken = localStorage.getItem("token");
+        if (storedToken) {
+          getMe()
+            .then((r) => setUser(r.data))
+            .catch(() => {
+              localStorage.removeItem("token");
+              setToken(null);
+            })
+            .finally(() => setLoading(false));
+        } else {
+          setLoading(false);
+        }
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    // Subscribe to Supabase auth state changes for token refresh / sign-out
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.access_token) {
+        const t = session.access_token;
+        localStorage.setItem("token", t);
+        setToken(t);
+        getMe()
+          .then((r) => setUser(r.data))
+          .catch(() => {
+            localStorage.removeItem("token");
+            setToken(null);
+            setUser(null);
+          });
+      } else {
+        localStorage.removeItem("token");
+        setToken(null);
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const setAuth = (t: string, u: User) => {
     localStorage.setItem("token", t);
@@ -43,7 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(u);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
