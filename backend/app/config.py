@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     # Supabase
     supabase_url: str = ""
-    supabase_jwt_secret: str = ""
+    supabase_anon_key: str = ""
 
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 587
