@@ -1,6 +1,5 @@
-from pydantic_settings import BaseSettings
 from functools import lru_cache
-
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     database_url: str = "postgresql://umpire:umpire@localhost:5432/umpire_db"

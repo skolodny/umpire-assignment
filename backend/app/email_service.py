@@ -1,6 +1,6 @@
-import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import aiosmtplib
 from jinja2 import Template
 from app.config import get_settings
 
