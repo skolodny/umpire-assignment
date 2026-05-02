@@ -63,6 +63,7 @@ def _fetch_and_import_feed(
 ) -> tuple[int, int]:
     """Fetch a single iCal feed and upsert its games, assigning *division* to every event."""
     try:
+        url = url.replace("webcal://", "https://")
         resp = httpx.get(url, timeout=30)
         resp.raise_for_status()
     except Exception as e:
