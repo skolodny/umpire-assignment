@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, availability, preferences, games, assignments, umpires
+from app.routers import oauth
 from app.scheduler import start_scheduler, stop_scheduler
 
 
@@ -23,6 +24,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(oauth.router)
 app.include_router(availability.router)
 app.include_router(preferences.router)
 app.include_router(games.router)

@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
+import OAuthCallback from "./pages/OAuthCallback";
 import UmpireDashboard from "./pages/UmpireDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AvailabilityTab from "./pages/AvailabilityTab";
@@ -17,7 +17,7 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
 
         <Route
           path="/dashboard"
