@@ -1,8 +1,21 @@
-import { API_BASE } from "../api";
+import { useState } from "react";
+import { supabase } from "../lib/supabaseClient";
+import type { Provider } from "@supabase/supabase-js";
 
 export default function LoginPage() {
-  const handleSignIn = (provider: string = "google") => {
-    window.location.href = `${API_BASE}/oauth/consent?provider=${provider}`;
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSignIn = async (provider: Provider = "google") => {
+    setError(null);
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}oauth/callback`,
+      },
+    });
+    if (oauthError) {
+      setError(oauthError.message);
+    }
   };
 
   return (
@@ -10,6 +23,7 @@ export default function LoginPage() {
       <div className="auth-card">
         <h1>Umpire Assignment</h1>
         <h2>Sign In</h2>
+        {error && <div className="error-msg">{error}</div>}
         <button className="btn-primary" onClick={() => handleSignIn("google")}>
           Sign in with Google
         </button>

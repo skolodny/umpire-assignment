@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { getMe } from "../api";
@@ -8,27 +8,42 @@ export default function OAuthCallback() {
   const navigate = useNavigate();
   const { setAuth } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const handled = useRef(false);
 
   useEffect(() => {
-    // Supabase will automatically parse the token from the URL hash or code
-    // in the query string and update the session.
-    supabase.auth.getSession().then(async ({ data: { session }, error: sessionError }) => {
-      if (sessionError || !session) {
-        setError("Authentication failed. Please try again.");
-        return;
-      }
+    // Surface any error returned by the OAuth provider in the redirect URL.
+    const params = new URLSearchParams(window.location.search);
+    const urlError = params.get("error_description") || params.get("error");
+    if (urlError) {
+      setError(urlError);
+      return;
+    }
 
-      const accessToken = session.access_token;
-      localStorage.setItem("token", accessToken);
+    // onAuthStateChange handles both implicit (hash) and PKCE (code exchange) flows.
+    // INITIAL_SESSION may fire first (with no session) while the PKCE code is being
+    // exchanged; SIGNED_IN fires once the session is ready.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (handled.current) return;
+        if (event !== "SIGNED_IN" && event !== "INITIAL_SESSION") return;
+        if (!session) return;
 
-      try {
-        const r = await getMe();
-        setAuth(accessToken, r.data);
-        navigate(r.data.role === "admin" ? "/admin" : "/dashboard", { replace: true });
-      } catch {
-        setError("Failed to load user profile. Please try again.");
+        handled.current = true;
+        subscription.unsubscribe();
+
+        const accessToken = session.access_token;
+        localStorage.setItem("token", accessToken);
+
+        try {
+          const r = await getMe();
+          setAuth(accessToken, r.data);
+          navigate(r.data.role === "admin" ? "/admin" : "/dashboard", { replace: true });
+        } catch {
+          setError("Failed to load user profile. Please try again.");
+        }
       }
-    });
+    );
+    return () => subscription.unsubscribe();
   }, [navigate, setAuth]);
 
   if (error) {
