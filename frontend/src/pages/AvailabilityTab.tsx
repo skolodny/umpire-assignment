@@ -192,6 +192,7 @@ export default function AvailabilityTab() {
   const handleSaveSlot = async (start: string, end: string) => {
     if (!selectedDate) return;
     await createSlot({ date: selectedDate, start_time: start, end_time: end });
+    setSelectedDate(null);
     await fetchSlots();
   };
 
