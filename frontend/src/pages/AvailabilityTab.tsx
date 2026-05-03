@@ -83,7 +83,7 @@ function EditModal({ event, onClose, onSave }: { event: EventImpl; onClose: () =
 
   return (<div className="modal-overlay" onClick={onClose}>
   <div className="modal" onClick={(e) => e.stopPropagation()}>
-    <h3>Edit Availability</h3>
+    <h3>Edit Availability for {event.start ? format(event.start, "yyyy-MM-dd") : ""}</h3>
 
     <div className="slot-form">
       <label>Start</label>
