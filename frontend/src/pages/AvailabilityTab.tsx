@@ -8,7 +8,7 @@ import { getAvailability, createSlot, deleteSlot, editSlot } from "../api";
 import { format } from "date-fns";
 import type { EventImpl } from "@fullcalendar/core/internal";
 import { Button, Modal } from "@heroui/react";
-import { TrashBin, FloppyDisk } from "@gravity-ui/icons";
+import { TrashBin, FloppyDisk, CirclePlus } from "@gravity-ui/icons";
 
 interface Slot {
   id: number;
@@ -45,6 +45,7 @@ function SlotModal({ date, slots, onClose, onSave, onDelete }: SlotModalProps) {
       <Modal.Backdrop>
         <Modal.Container size="sm">
           <Modal.Dialog>
+            <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading>Availability for {date}</Modal.Heading>
             </Modal.Header>
@@ -81,8 +82,7 @@ function SlotModal({ date, slots, onClose, onSave, onDelete }: SlotModalProps) {
               </div>
             </Modal.Body>
             <Modal.Footer className="flex gap-2 justify-end">
-              <Button variant="primary" onPress={handleAdd}>Add Slot</Button>
-              <Button variant="secondary" onPress={onClose}>Close</Button>
+              <Button isIconOnly variant="primary" onPress={handleAdd}><CirclePlus /></Button>
             </Modal.Footer>
           </Modal.Dialog>
         </Modal.Container>
@@ -113,6 +113,7 @@ function EditModal({ event, onClose, onSave, onDelete }: { event: EventImpl; onC
       <Modal.Backdrop>
         <Modal.Container size="sm">
           <Modal.Dialog>
+            <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading>
                 Edit Availability for {event.start ? format(event.start, "yyyy-MM-dd") : ""}
@@ -139,7 +140,6 @@ function EditModal({ event, onClose, onSave, onDelete }: { event: EventImpl; onC
             </Modal.Body>
             <Modal.Footer className="flex gap-2 justify-end">
               <Button isIconOnly variant="primary" onPress={handleUpdate}><FloppyDisk /></Button>
-              <Button variant="secondary" onPress={onClose}>Cancel</Button>
               <Button isIconOnly variant="danger" onPress={() => onDelete(Number(event.id))}><TrashBin /></Button>
             </Modal.Footer>
           </Modal.Dialog>
