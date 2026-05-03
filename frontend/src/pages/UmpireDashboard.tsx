@@ -1,6 +1,7 @@
 
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Button } from "@heroui/react";
 
 export default function UmpireDashboard() {
   const { user, logout } = useAuth();
@@ -12,24 +13,24 @@ export default function UmpireDashboard() {
   };
 
   return (
-    <div className="dashboard">
-      <header className="dashboard-header">
-        <span className="logo">⚾ Umpire Assignment</span>
-        <span className="user-info">Hi, {user?.name}</span>
-        <button className="btn-ghost" onClick={handleLogout}>Sign Out</button>
+    <div className="flex flex-col min-h-screen">
+      <header className="flex items-center gap-4 bg-slate-900 text-white px-6 h-14">
+        <span className="text-lg font-bold flex-1">⚾ Umpire Assignment</span>
+        <span className="text-sm text-slate-400">Hi, {user?.name}</span>
+        <Button variant="outline" size="sm" onPress={handleLogout}>Sign Out</Button>
       </header>
-      <nav className="dashboard-nav">
-        <NavLink to="/dashboard/availability" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+      <nav className="flex bg-slate-800 px-6">
+        <NavLink to="/dashboard/availability" className={({ isActive }) => `px-5 py-3 text-sm font-medium border-b-2 transition-colors ${isActive ? "text-white border-blue-500" : "text-slate-400 border-transparent hover:text-white"}`}>
           Availability
         </NavLink>
-        <NavLink to="/dashboard/preferences" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+        <NavLink to="/dashboard/preferences" className={({ isActive }) => `px-5 py-3 text-sm font-medium border-b-2 transition-colors ${isActive ? "text-white border-blue-500" : "text-slate-400 border-transparent hover:text-white"}`}>
           Divisions
         </NavLink>
-        <NavLink to="/dashboard/assignments" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+        <NavLink to="/dashboard/assignments" className={({ isActive }) => `px-5 py-3 text-sm font-medium border-b-2 transition-colors ${isActive ? "text-white border-blue-500" : "text-slate-400 border-transparent hover:text-white"}`}>
           Assignments
         </NavLink>
       </nav>
-      <main className="dashboard-main">
+      <main className="flex-1 p-6 max-w-5xl mx-auto w-full">
         <Outlet />
       </main>
     </div>

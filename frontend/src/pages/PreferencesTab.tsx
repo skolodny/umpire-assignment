@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getPreferences, setPreferences } from "../api";
+import { Button, Checkbox } from "@heroui/react";
 
 type Division = "rookies" | "int_i" | "int_ii";
 
@@ -65,30 +66,32 @@ export default function PreferencesTab() {
     setSaved(true);
   };
 
-  if (loading) return <div className="tab-content">Loading…</div>;
+  if (loading) return <div className="p-6 text-slate-500">Loading…</div>;
 
   return (
-    <div className="tab-content">
-      <h2>Division Preferences</h2>
-      <p className="hint">
+    <div className="flex flex-col gap-4">
+      <h2 className="text-xl font-semibold">Division Preferences</h2>
+      <p className="text-sm text-slate-500">
         Select which divisions you are willing to umpire. Higher divisions automatically include lower ones.
       </p>
-      <div className="pref-list">
+      <div className="flex flex-col gap-3">
         {(["rookies", "int_i", "int_ii"] as Division[]).map((div) => (
-          <label key={div} className="pref-row">
-            <input
-              type="checkbox"
-              checked={selected.has(div)}
-              onChange={(e) => toggle(div, e.target.checked)}
-            />
-            <span>{LABELS[div]}</span>
-          </label>
+          <Checkbox
+            key={div}
+            isSelected={selected.has(div)}
+            onChange={(checked) => toggle(div, checked)}
+          >
+            <Checkbox.Control>
+              <Checkbox.Indicator />
+            </Checkbox.Control>
+            <Checkbox.Content>{LABELS[div]}</Checkbox.Content>
+          </Checkbox>
         ))}
       </div>
-      <button className="btn-primary" onClick={handleSave}>
-        Save Preferences
-      </button>
-      {saved && <span className="success-msg">Saved!</span>}
+      <div className="flex items-center gap-3">
+        <Button variant="primary" onPress={handleSave}>Save Preferences</Button>
+        {saved && <span className="text-green-600 text-sm">Saved!</span>}
+      </div>
     </div>
   );
 }
