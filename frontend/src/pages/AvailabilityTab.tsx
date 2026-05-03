@@ -51,9 +51,6 @@ function SlotModal({ date, slots, onClose, onSave, onDelete }: SlotModalProps) {
             </Modal.Header>
             <Modal.Body className="flex flex-col gap-3">
               <div className="flex flex-col gap-2 mb-2">
-                {slots.length === 0 && (
-                  <p className="text-slate-400 italic text-sm">No slots yet</p>
-                )}
                 {slots.map((s) => (
                   <div key={s.id} className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
                     <span className="text-sm">{s.start_time.slice(0, 5)} – {s.end_time.slice(0, 5)}</span>
