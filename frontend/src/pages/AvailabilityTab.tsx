@@ -7,8 +7,9 @@ import type { DatesSetArg, EventClickArg } from "@fullcalendar/core";
 import { getAvailability, createSlot, deleteSlot, editSlot } from "../api";
 import { format } from "date-fns";
 import type { EventImpl } from "@fullcalendar/core/internal";
-import { Button, Modal } from "@heroui/react";
+import { Button, Modal, toast } from "@heroui/react";
 import { TrashBin, FloppyDisk, Plus } from "@gravity-ui/icons";
+import type { AxiosError } from "axios";
 
 interface Slot {
   id: number;
@@ -188,21 +189,48 @@ export default function AvailabilityTab() {
 
   const handleSaveSlot = async (start: string, end: string) => {
     if (!selectedDate) return;
-    await createSlot({ date: selectedDate, start_time: start, end_time: end });
+    const date = selectedDate;
     setSelectedDate(null);
+    const loadingId = toast("Saving changes...", { isLoading: true, timeout: 0});
+    try {
+      await createSlot({ date, start_time: start, end_time: end });
+      toast.close(loadingId);
+      toast.success("Availability slot created");
+    } catch {
+      toast.close(loadingId);
+      toast.danger("Failed to create availability slot", { description: "Please try again" });
+    }
     await fetchSlots();
   };
 
   const handleDeleteSlot = async (id: number) => {
-    await deleteSlot(id);
     setSelectedEvent(null);
+    const loadingId = toast("Deleting slot...", { isLoading: true, timeout: 0});
+    try {
+      await deleteSlot(id);
+      toast.close(loadingId);
+      toast.success("Availability slot deleted");
+    } catch {
+      toast.close(loadingId);
+      toast.danger("Failed to delete availability slot", { description: "Please try again" });
+    }
+    await deleteSlot(id);
     await fetchSlots();
   };
 
   const handleEditSaveSlot = async (start: string, end: string) => {
     if (!selectedEvent) return;
-    await editSlot(Number(selectedEvent.id), { start_time: start, end_time: end });
+    const slotId = Number(selectedEvent.id);
     setSelectedEvent(null);
+    const loadingId = toast("Saving changes...", { isLoading: true, timeout: 0});
+    try {
+    await editSlot(slotId, { start_time: start, end_time: end });
+      toast.close(loadingId);
+      toast.success("Availability slot updated");
+    } catch {
+      toast.close(loadingId);
+      toast.danger("Failed to update availability slot", { description: "Please try again" });
+    }
     await fetchSlots();
   };
 
