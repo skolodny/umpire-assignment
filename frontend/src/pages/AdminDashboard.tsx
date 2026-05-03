@@ -20,7 +20,7 @@ export default function AdminDashboard() {
           <Chip color="danger" size="sm" className="align-middle ml-1">Admin</Chip>
         </span>
         <span className="text-sm text-slate-400">Hi, {user?.name}</span>
-        <Button variant="tertiary" size="sm" onPress={handleLogout}>Sign Out</Button>
+        <Button className='text-white' variant="tertiary" size="sm" onPress={handleLogout}>Sign Out</Button>
       </header>
       <nav className="flex bg-slate-800 px-6">
         <NavLink to="/admin/games" className={({ isActive }) => `px-5 py-3 text-sm font-medium border-b-2 transition-colors ${isActive ? "text-white border-blue-500" : "text-slate-400 border-transparent hover:text-white"}`}>
