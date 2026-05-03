@@ -140,7 +140,7 @@ function EditModal({ event, onClose, onSave, onDelete }: { event: EventImpl; onC
             <Modal.Footer className="flex gap-2 justify-end">
               <Button variant="primary" onPress={handleUpdate}>Save Changes</Button>
               <Button variant="secondary" onPress={onClose}>Cancel</Button>
-                <Button isIconOnly variant="danger" onPress={() => onDelete(Number(event.id))}><TrashBin /></Button>
+              <Button isIconOnly variant="danger" onPress={() => onDelete(Number(event.id))}><TrashBin /></Button>
             </Modal.Footer>
           </Modal.Dialog>
         </Modal.Container>
@@ -197,6 +197,7 @@ export default function AvailabilityTab() {
 
   const handleDeleteSlot = async (id: number) => {
     await deleteSlot(id);
+    setSelectedEvent(null);
     await fetchSlots();
   };
 
