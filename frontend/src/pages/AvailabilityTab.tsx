@@ -67,7 +67,7 @@ function SlotModal({ date, slots, onClose, onSave, onDelete }: SlotModalProps) {
   );
 }
 
-function EditModal({ event, onClose, onSave }: { event: EventImpl; onClose: () => void; onSave: (start: string, end: string) => void }) {
+function EditModal({ event, onClose, onSave, onDelete }: { event: EventImpl; onClose: () => void; onSave: (start: string, end: string) => void; onDelete: (id: number) => void }) {
   const [start, setStart] = useState(event.start ? format(event.start, "HH:mm") : "09:00");
   const [end, setEnd] = useState(event.end ? format(event.end, "HH:mm") : "17:00");
   const [error, setError] = useState("");
@@ -106,7 +106,9 @@ function EditModal({ event, onClose, onSave }: { event: EventImpl; onClose: () =
         <button className="btn-primary" onClick={handleUpdate}>
           Save Changes
         </button>
-
+        <button className="btn-danger" onClick={() => onDelete(Number(event.id))}>
+          Delete Slot
+        </button>
         <button className="btn-secondary" onClick={onClose}>
           Cancel
         </button>
@@ -198,6 +200,7 @@ export default function AvailabilityTab() {
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
           onSave={handleEditSaveSlot}
+          onDelete={handleDeleteSlot}
         />
       )}
     </div>
