@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import type { Provider } from "@supabase/supabase-js";
 import { Button, Card } from "@heroui/react";
+import { Icon } from "@iconify/react";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -30,9 +31,10 @@ export default function LoginPage() {
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>
           )}
-          <Button variant="primary" onPress={() => handleSignIn("google")}>
-            Sign in with Google
-          </Button>
+            <Button className="w-full" variant="tertiary" onPress={() => handleSignIn("google")}>
+              <Icon icon="devicon:google" />
+              Sign in with Google
+            </Button>
         </Card.Content>
       </Card>
     </div>

@@ -8,6 +8,7 @@ import { getAvailability, createSlot, deleteSlot, editSlot } from "../api";
 import { format } from "date-fns";
 import type { EventImpl } from "@fullcalendar/core/internal";
 import { Button, Modal } from "@heroui/react";
+import { TrashBin } from "@gravity-ui/icons";
 
 interface Slot {
   id: number;
@@ -55,7 +56,7 @@ function SlotModal({ date, slots, onClose, onSave, onDelete }: SlotModalProps) {
                 {slots.map((s) => (
                   <div key={s.id} className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
                     <span className="text-sm">{s.start_time.slice(0, 5)} – {s.end_time.slice(0, 5)}</span>
-                    <Button variant="danger" size="sm" onPress={() => onDelete(s.id)}>✕</Button>
+                    <Button isIconOnly variant="danger" size="sm" onPress={() => onDelete(s.id)}><TrashBin /></Button>
                   </div>
                 ))}
               </div>
@@ -138,8 +139,8 @@ function EditModal({ event, onClose, onSave, onDelete }: { event: EventImpl; onC
             </Modal.Body>
             <Modal.Footer className="flex gap-2 justify-end">
               <Button variant="primary" onPress={handleUpdate}>Save Changes</Button>
-              <Button variant="danger" onPress={() => onDelete(Number(event.id))}>Delete Slot</Button>
               <Button variant="secondary" onPress={onClose}>Cancel</Button>
+                <Button isIconOnly variant="danger" onPress={() => onDelete(Number(event.id))}><TrashBin /></Button>
             </Modal.Footer>
           </Modal.Dialog>
         </Modal.Container>
