@@ -26,6 +26,8 @@ export const createSlot = (data: { date: string; start_time: string; end_time: s
 
 export const deleteSlot = (slotId: number) => api.delete(`/availability/${slotId}`);
 
+export const editSlot = (slotId: number, data: { start_time: string; end_time: string }) => api.put(`/availability/${slotId}`, data);
+
 // Preferences
 export const getPreferences = () => api.get("/preferences");
 
