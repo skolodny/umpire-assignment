@@ -18,7 +18,7 @@ export default function UmpireDashboard() {
       <header className="flex items-center gap-4 bg-slate-900 text-white px-6 h-14">
         <span className="text-lg font-bold flex-1">⚾ Umpire Assignment</span>
         <span className="text-sm text-slate-400">Hi, {user?.name}</span>
-        <Button isIconOnly variant="tertiary" size="sm" onPress={handleLogout}><ArrowRightFromSquare /></Button>
+        <Button isIconOnly variant="primary" size="sm" onPress={handleLogout}><ArrowRightFromSquare /></Button>
       </header>
       <nav className="flex bg-slate-800 px-6">
         <NavLink to="/dashboard/availability" className={({ isActive }) => `px-5 py-3 text-sm font-medium border-b-2 transition-colors ${isActive ? "text-white border-blue-500" : "text-slate-400 border-transparent hover:text-white"}`}>
