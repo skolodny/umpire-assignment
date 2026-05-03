@@ -54,7 +54,7 @@ def get_availability(
 
 @router.post("", response_model=SlotOut, status_code=201)
 def create_slot(
-    slot: SlotEdit,
+    slot: SlotCreate,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -74,7 +74,7 @@ def create_slot(
 @router.put("/{slot_id}", response_model=SlotOut, status_code=200)
 def update_slot(
     slot_id: int,
-    slot: SlotCreate,
+    slot: SlotEdit,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
