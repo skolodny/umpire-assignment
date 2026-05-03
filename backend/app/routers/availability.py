@@ -15,6 +15,9 @@ class SlotCreate(BaseModel):
     start_time: time
     end_time: time
 
+class SlotEdit(BaseModel):
+    start_time: time
+    end_time: time
 
 class SlotOut(BaseModel):
     id: int
@@ -51,7 +54,7 @@ def get_availability(
 
 @router.post("", response_model=SlotOut, status_code=201)
 def create_slot(
-    slot: SlotCreate,
+    slot: SlotEdit,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -82,7 +85,6 @@ def update_slot(
         raise HTTPException(status_code=403, detail="Not authorized")
     if slot.start_time >= slot.end_time:
         raise HTTPException(status_code=400, detail="start_time must be before end_time")
-    db_slot.date = slot.date
     db_slot.start_time = slot.start_time
     db_slot.end_time = slot.end_time
     db.commit()
