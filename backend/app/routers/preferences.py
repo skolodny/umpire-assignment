@@ -1,3 +1,5 @@
+'''API router for managing user preferences, such as preferred divisions.'''
+
 from typing import List
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -10,10 +12,12 @@ router = APIRouter(prefix="/preferences", tags=["preferences"])
 
 
 class PreferencesRequest(BaseModel):
+    '''Request model for updating user preferences. Currently only includes preferred divisions.'''
     divisions: List[str]
 
 
 class PreferencesResponse(BaseModel):
+    '''Response model for user preferences.'''
     divisions: List[str]
 
 
@@ -22,6 +26,7 @@ def get_preferences(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    '''Get the current user's preferences. Currently returns a list of preferred divisions.'''
     prefs = db.query(models.DivisionPreference).filter(
         models.DivisionPreference.user_id == current_user.id
     ).all()
@@ -34,6 +39,7 @@ def set_preferences(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    '''Set the current user's preferences. Currently allows updating the list of preferred divisions.'''
     valid_divisions = {d.value for d in models.Division}
     for div in req.divisions:
         if div not in valid_divisions:

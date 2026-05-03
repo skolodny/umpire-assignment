@@ -1,6 +1,8 @@
+'''Scheduler module to check for expired umpire assignments and notify admins.'''
+
+from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
 from app.database import SessionLocal
 from app import models
 from app.email_service import send_admin_notification
@@ -9,6 +11,9 @@ scheduler = AsyncIOScheduler()
 
 
 async def check_expired_assignments():
+    '''Check for pending assignments that have not been 
+    accepted or declined within 24 hours and mark them as expired. 
+    Notify admins about expired assignments.'''
     db: Session = SessionLocal()
     try:
         cutoff = datetime.utcnow() - timedelta(hours=24)
@@ -43,9 +48,11 @@ async def check_expired_assignments():
 
 
 def start_scheduler():
+    '''Start the scheduler to run the expiry check every hour.'''
     scheduler.add_job(check_expired_assignments, "interval", hours=1, id="expiry_check")
     scheduler.start()
 
 
 def stop_scheduler():
+    '''Stop the scheduler and clean up resources.'''
     scheduler.shutdown()

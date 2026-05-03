@@ -1,3 +1,5 @@
+'''Authentication and user management using Supabase JWT tokens.'''
+
 from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -20,6 +22,8 @@ def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     db: Session = Depends(get_db),
 ) -> models.User:
+    '''Authenticate the user using the Supabase JWT token and 
+    return the corresponding User model instance.'''
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -92,6 +96,7 @@ def get_current_user(
 
 
 def require_admin(current_user: models.User = Depends(get_current_user)) -> models.User:
+    '''Dependency that ensures the current user has admin privileges. Raises 403 if not an admin.'''
     if current_user.role != models.UserRole.admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return current_user

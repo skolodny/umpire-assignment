@@ -1,3 +1,5 @@
+'''Alembic migration environment setup.'''
+
 import os
 import sys
 from logging.config import fileConfig
@@ -21,6 +23,7 @@ config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"
 
 
 def run_migrations_offline() -> None:
+    '''Run migrations in 'offline' mode.'''
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -33,6 +36,8 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
+    '''Run migrations in 'online' mode. 
+    In this scenario we need to create an Engine and associate a connection with the context.'''
     from app.database import get_engine
     connectable = get_engine()
     with connectable.connect() as connection:

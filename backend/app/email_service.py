@@ -1,3 +1,5 @@
+'''Email service for sending assignment notifications and admin updates.'''
+
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import aiosmtplib
@@ -43,6 +45,7 @@ Please log in to reassign the game if needed.
 
 
 async def send_email(to: str, subject: str, body: str) -> None:
+    '''Send an email using SMTP. If SMTP is not configured, print to console.'''
     if not settings.smtp_username:
         print(f"[EMAIL] To: {to}\nSubject: {subject}\n{body}")
         return
@@ -74,6 +77,7 @@ async def send_assignment_email(
     game_division: str,
     token: str,
 ) -> None:
+    '''Send an email to the umpire about a new assignment.'''
     accept_url = f"{settings.app_base_url}/assignments?action=accept&token={token}"
     decline_url = f"{settings.app_base_url}/assignments?action=decline&token={token}"
     body = Template(ASSIGNMENT_TEMPLATE).render(
@@ -98,6 +102,7 @@ async def send_admin_notification(
     game_date: str,
     reason: str,
 ) -> None:
+    '''Send an email notification to the admin about an assignment update.'''
     body = Template(ADMIN_NOTIFICATION_TEMPLATE).render(
         assignment_id=assignment_id,
         umpire_name=umpire_name,

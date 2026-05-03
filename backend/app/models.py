@@ -1,3 +1,5 @@
+'''SQLAlchemy models for the umpire assignment system.'''
+
 import enum
 from sqlalchemy import (
     Column, Integer, String, Enum, ForeignKey, Date, Time,
@@ -7,21 +9,26 @@ from sqlalchemy.orm import relationship, DeclarativeBase
 
 
 class Base(DeclarativeBase):
-    pass
+    '''Base class for SQLAlchemy models. All models should inherit from this class.'''
 
 
 class UserRole(str, enum.Enum):
+    '''Role of a user in the system. Umpires can be assigned to games, 
+    admins can manage games and assignments.'''
     umpire = "umpire"
     admin = "admin"
 
 
 class Division(str, enum.Enum):
+    '''Baseball divisions. Umpires can have preferences for which divisions they want to umpire in. 
+    Games belong to a division.'''
     rookies = "rookies"
     int_i = "int_i"
     int_ii = "int_ii"
 
 
 class AssignmentStatus(str, enum.Enum):
+    '''Status of an umpire assignment to a game.'''
     pending = "pending"
     accepted = "accepted"
     declined = "declined"
@@ -29,6 +36,8 @@ class AssignmentStatus(str, enum.Enum):
 
 
 class User(Base):
+    '''User model representing umpires and admins. 
+    Supports authentication via Supabase or email/password.'''
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -38,12 +47,20 @@ class User(Base):
     role = Column(Enum(UserRole), nullable=False, default=UserRole.umpire)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    availability_slots = relationship("AvailabilitySlot", back_populates="user", cascade="all, delete-orphan")
-    division_preferences = relationship("DivisionPreference", back_populates="user", cascade="all, delete-orphan")
-    assignments = relationship("Assignment", back_populates="umpire", cascade="all, delete-orphan")
+    availability_slots = relationship("AvailabilitySlot",
+                                      back_populates="user",
+                                      cascade="all, delete-orphan")
+    division_preferences = relationship("DivisionPreference",
+                                        back_populates="user",
+                                        cascade="all, delete-orphan")
+    assignments = relationship("Assignment",
+                               back_populates="umpire",
+                               cascade="all, delete-orphan")
 
 
 class AvailabilitySlot(Base):
+    '''Model representing a time slot when an umpire is available to umpire games. 
+    Umpires can create multiple availability slots.'''
     __tablename__ = "availability_slots"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -56,6 +73,8 @@ class AvailabilitySlot(Base):
 
 
 class DivisionPreference(Base):
+    '''Model representing an umpire's preference for which divisions they want to umpire in. 
+    Umpires can have multiple division preferences.'''
     __tablename__ = "division_preferences"
     __table_args__ = (UniqueConstraint("user_id", "division"),)
 
@@ -67,6 +86,8 @@ class DivisionPreference(Base):
 
 
 class Game(Base):
+    '''Model representing a baseball game. 
+    Games belong to a division and have associated umpire assignments.'''
     __tablename__ = "games"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -85,6 +106,8 @@ class Game(Base):
 
 
 class Assignment(Base):
+    '''Model representing the assignment of an umpire to a game. 
+    Contains status and timestamps for when the assignment was made and responded to.'''
     __tablename__ = "assignments"
 
     id = Column(Integer, primary_key=True, index=True)

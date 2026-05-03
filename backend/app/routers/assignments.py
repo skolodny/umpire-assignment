@@ -1,3 +1,5 @@
+'''API router for managing umpire assignments to games.'''
+
 from datetime import datetime, date, time
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -15,15 +17,18 @@ settings = get_settings()
 
 
 class AssignmentCreate(BaseModel):
+    '''Request model for creating a new assignment.'''
     game_id: int
     umpire_id: int
 
 
 class AssignmentRespond(BaseModel):
+    '''Request model for responding to an assignment.'''
     action: str  # "accept" or "decline"
 
 
 class GameBrief(BaseModel):
+    '''Brief information about the game associated with an assignment.'''
     id: int
     title: str
     date: date
@@ -33,10 +38,12 @@ class GameBrief(BaseModel):
     division: Optional[str]
 
     class Config:
+        '''Configure Pydantic to allow population from ORM objects.'''
         from_attributes = True
 
 
 class AssignmentOut(BaseModel):
+    '''Response model for an assignment, including related game information.'''
     id: int
     game_id: int
     umpire_id: int
@@ -46,6 +53,7 @@ class AssignmentOut(BaseModel):
     game: GameBrief
 
     class Config:
+        '''Configure Pydantic to allow population from ORM objects.'''
         from_attributes = True
 
 
@@ -65,6 +73,7 @@ async def create_assignment(
     admin: models.User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
+    '''Create a new umpire assignment for a game. Only admins can perform this action.'''
     game = db.query(models.Game).filter(models.Game.id == req.game_id).first()
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
@@ -109,6 +118,8 @@ def list_assignments(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    '''List assignments for the current user.
+    Admins see all assignments, while umpires only see their own.'''
     if current_user.role == models.UserRole.admin:
         return db.query(models.Assignment).join(models.Game).all()
     return db.query(models.Assignment).filter(
@@ -123,6 +134,7 @@ async def respond_to_assignment(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    '''Allow the umpire to accept or decline an assignment. Admins can also update the status.'''
     assignment = db.query(models.Assignment).filter(models.Assignment.id == assignment_id).first()
     if not assignment:
         raise HTTPException(status_code=404, detail="Assignment not found")
@@ -156,6 +168,7 @@ async def respond_by_token(
     action: str,
     db: Session = Depends(get_db),
 ):
+    '''Allow the umpire to accept or decline an assignment using the token from the email link.'''
     try:
         assignment_id = _decode_action_token(token)
     except Exception:
@@ -191,6 +204,7 @@ def download_ical(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    '''Allow the umpire to download an iCal file for their accepted assignment.'''
     assignment = db.query(models.Assignment).filter(models.Assignment.id == assignment_id).first()
     if not assignment:
         raise HTTPException(status_code=404, detail="Assignment not found")
@@ -228,6 +242,7 @@ def download_ical(
 
 
 async def _notify_admin_of_decline(db: Session, assignment: models.Assignment, reason: str):
+    '''Notify admins about an assignment decline or expiration.'''
     admins = db.query(models.User).filter(models.User.role == models.UserRole.admin).all()
     for admin in admins:
         try:

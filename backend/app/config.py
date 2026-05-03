@@ -1,7 +1,10 @@
+'''Application configuration using Pydantic BaseSettings. Loads settings from environment variables or .env file.'''
+
 from functools import lru_cache
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
+    '''Application configuration loaded from environment variables or .env file.'''
     database_url: str = "postgresql://umpire:umpire@localhost:5432/umpire_db"
     secret_key: str = "changeme-secret-key"
     algorithm: str = "HS256"
@@ -23,9 +26,12 @@ class Settings(BaseSettings):
     app_base_url: str = "http://localhost:3000"
 
     class Config:
+        '''Pydantic configuration for loading settings.'''
         env_file = ".env"
 
 
 @lru_cache()
 def get_settings() -> Settings:
+    '''Get the application settings, loading from environment variables or .env file. 
+    Cached for performance.'''
     return Settings()

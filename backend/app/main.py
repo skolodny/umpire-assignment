@@ -1,13 +1,15 @@
+"""Main FastAPI application setup and route registration."""
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, availability, preferences, games, assignments, umpires
-from app.routers import oauth
+from app.routers import auth, oauth, availability, preferences, games, assignments, umpires
 from app.scheduler import start_scheduler, stop_scheduler
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
+    """Manage application startup and shutdown lifecycle."""
     start_scheduler()
     yield
     stop_scheduler()
@@ -34,4 +36,5 @@ app.include_router(umpires.router)
 
 @app.get("/health")
 def health():
+    """Return API health status."""
     return {"status": "ok"}

@@ -1,3 +1,5 @@
+'''API router for managing umpires. Currently includes an endpoint for listing all umpires and their preferences.'''
+
 from typing import List
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session

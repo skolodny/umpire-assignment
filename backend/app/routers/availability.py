@@ -1,3 +1,7 @@
+'''API router for managing umpire availability slots.
+Umpires can create, edit, and delete their own availability slots, 
+while admins can manage slots for any user.'''
+
 from datetime import date, time
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,15 +15,18 @@ router = APIRouter(prefix="/availability", tags=["availability"])
 
 
 class SlotCreate(BaseModel):
+    '''Request model for creating a new availability slot.'''
     date: date
     start_time: time
     end_time: time
 
 class SlotEdit(BaseModel):
+    '''Request model for editing an existing availability slot.'''
     start_time: time
     end_time: time
 
 class SlotOut(BaseModel):
+    '''Response model for an availability slot.'''
     id: int
     user_id: int
     date: date
@@ -27,6 +34,7 @@ class SlotOut(BaseModel):
     end_time: time
 
     class Config:
+        '''Configure Pydantic to allow population from ORM objects.'''
         from_attributes = True
 
 
@@ -37,6 +45,8 @@ def get_availability(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    '''Get availability slots for the current user, or for a specified user 
+    if the current user is an admin. Optionally filter by month (YYYY-MM).'''
     target_user_id = user_id if (user_id and current_user.role == models.UserRole.admin) else current_user.id
     query = db.query(models.AvailabilitySlot).filter(models.AvailabilitySlot.user_id == target_user_id)
     if month:
@@ -58,6 +68,7 @@ def create_slot(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    ''''Create a new availability slot for the current user.'''
     if slot.start_time >= slot.end_time:
         raise HTTPException(status_code=400, detail="start_time must be before end_time")
     db_slot = models.AvailabilitySlot(
@@ -78,6 +89,7 @@ def update_slot(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    '''Edit an existing availability slot. Users can only edit their own slots, while admins can edit any slot.'''
     db_slot = db.query(models.AvailabilitySlot).filter(models.AvailabilitySlot.id == slot_id).first()
     if not db_slot:
         raise HTTPException(status_code=404, detail="Slot not found")
@@ -98,6 +110,8 @@ def delete_slot(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    '''Delete an availability slot. 
+    Users can only delete their own slots, while admins can delete any slot.'''
     slot = db.query(models.AvailabilitySlot).filter(models.AvailabilitySlot.id == slot_id).first()
     if not slot:
         raise HTTPException(status_code=404, detail="Slot not found")
