@@ -3,9 +3,10 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { DateClickArg } from "@fullcalendar/interaction";
-import type { DatesSetArg } from "@fullcalendar/core";
-import { getAvailability, createSlot, deleteSlot } from "../api";
+import type { DatesSetArg, EventClickArg } from "@fullcalendar/core";
+import { getAvailability, createSlot, deleteSlot, editSlot } from "../api";
 import { format } from "date-fns";
+import type { EventImpl } from "@fullcalendar/core/internal";
 
 interface Slot {
   id: number;
@@ -66,10 +67,59 @@ function SlotModal({ date, slots, onClose, onSave, onDelete }: SlotModalProps) {
   );
 }
 
+function EditModal({ event, onClose, onSave }: { event: EventImpl; onClose: () => void; onSave: (start: string, end: string) => void }) {
+  const [start, setStart] = useState(event.start ? format(event.start, "HH:mm") : "09:00");
+  const [end, setEnd] = useState(event.end ? format(event.end, "HH:mm") : "17:00");
+  const [error, setError] = useState("");
+
+  const handleUpdate = () => {
+    if (start >= end) {
+      setError("Start time must be before end time");
+      return;
+    }
+    setError("");
+    onSave(start, end);
+  };
+
+  return (<div className="modal-overlay" onClick={onClose}>
+  <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <h3>Edit Availability</h3>
+
+    <div className="slot-form">
+      <label>Start</label>
+      <input
+        type="time"
+        value={start}
+        onChange={(e) => setStart(e.target.value)}
+      />
+
+      <label>End</label>
+      <input
+        type="time"
+        value={end}
+        onChange={(e) => setEnd(e.target.value)}
+      />
+
+      {error && <div className="error-msg">{error}</div>}
+
+      <div className="modal-actions">
+        <button className="btn-primary" onClick={handleUpdate}>
+          Save Changes
+        </button>
+
+        <button className="btn-secondary" onClick={onClose}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>)
+}
 export default function AvailabilityTab() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [currentMonth, setCurrentMonth] = useState(format(new Date(), "yyyy-MM"));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventImpl | null>(null);
 
   const fetchSlots = useCallback(async () => {
     const r = await getAvailability(undefined, currentMonth);
@@ -95,6 +145,10 @@ export default function AvailabilityTab() {
     setSelectedDate(info.dateStr);
   };
 
+  const handleEventClick = (info: EventClickArg) => {
+    setSelectedEvent(info.event)
+  };
+
   const handleDatesSet = (info: DatesSetArg) => {
     setCurrentMonth(format(info.view.currentStart, "yyyy-MM"));
   };
@@ -110,6 +164,13 @@ export default function AvailabilityTab() {
     await fetchSlots();
   };
 
+  const handleEditSaveSlot = async (start: string, end: string) => {
+    if (!selectedEvent) return;
+    await editSlot(Number(selectedEvent.id), { start_time: start, end_time: end });
+    setSelectedEvent(null);
+    await fetchSlots();
+  }
+
   return (
     <div className="tab-content">
       <h2>My Availability</h2>
@@ -118,6 +179,7 @@ export default function AvailabilityTab() {
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
         events={calendarEvents}
+        eventClick={handleEventClick}
         dateClick={handleDateClick}
         datesSet={handleDatesSet}
         height="auto"
@@ -129,6 +191,13 @@ export default function AvailabilityTab() {
           onClose={() => setSelectedDate(null)}
           onSave={handleSaveSlot}
           onDelete={handleDeleteSlot}
+        />
+      )}
+      {selectedEvent && (
+        <EditModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          onSave={handleEditSaveSlot}
         />
       )}
     </div>
