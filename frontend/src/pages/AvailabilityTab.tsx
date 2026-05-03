@@ -8,7 +8,7 @@ import { getAvailability, createSlot, deleteSlot, editSlot } from "../api";
 import { format } from "date-fns";
 import type { EventImpl } from "@fullcalendar/core/internal";
 import { Button, Modal } from "@heroui/react";
-import { TrashBin } from "@gravity-ui/icons";
+import { TrashBin, FloppyDisk } from "@gravity-ui/icons";
 
 interface Slot {
   id: number;
@@ -138,7 +138,7 @@ function EditModal({ event, onClose, onSave, onDelete }: { event: EventImpl; onC
               )}
             </Modal.Body>
             <Modal.Footer className="flex gap-2 justify-end">
-              <Button variant="primary" onPress={handleUpdate}>Save Changes</Button>
+              <Button isIconOnly variant="primary" onPress={handleUpdate}><FloppyDisk /></Button>
               <Button variant="secondary" onPress={onClose}>Cancel</Button>
               <Button isIconOnly variant="danger" onPress={() => onDelete(Number(event.id))}><TrashBin /></Button>
             </Modal.Footer>
