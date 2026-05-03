@@ -35,7 +35,6 @@ class User(Base):
     supabase_id = Column(String, unique=True, nullable=True, index=True)
     email = Column(String, unique=True, nullable=False, index=True)
     name = Column(String, nullable=False)
-    password_hash = Column(String, nullable=True)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.umpire)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
