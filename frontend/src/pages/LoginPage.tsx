@@ -25,7 +25,6 @@ export default function LoginPage() {
       <Card className="w-full max-w-md p-10">
         <Card.Header className="flex-col items-start gap-1 pb-4">
           <Card.Title className="text-2xl font-bold">⚾ Umpire Assignment</Card.Title>
-          <Card.Description>Sign in to continue</Card.Description>
         </Card.Header>
         <Card.Content className="flex flex-col gap-3">
           {error && (
