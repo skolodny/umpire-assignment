@@ -42,14 +42,22 @@ class SlotOut(BaseModel):
 def get_availability(
     user_id: Optional[int] = None,
     month: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     '''Get availability slots for the current user, or for a specified user 
-    if the current user is an admin. Optionally filter by month (YYYY-MM).'''
+    if the current user is an admin. Optionally filter by month (YYYY-MM) or
+    by date range (start_date / end_date).'''
     target_user_id = user_id if (user_id and current_user.role == models.UserRole.admin) else current_user.id
     query = db.query(models.AvailabilitySlot).filter(models.AvailabilitySlot.user_id == target_user_id)
-    if month:
+    if start_date and end_date:
+        query = query.filter(
+            models.AvailabilitySlot.date >= start_date,
+            models.AvailabilitySlot.date <= end_date,
+        )
+    elif month:
         try:
             year, mon = map(int, month.split("-"))
             from sqlalchemy import extract

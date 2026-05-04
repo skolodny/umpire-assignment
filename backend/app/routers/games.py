@@ -37,11 +37,18 @@ class EligibleUmpire(BaseModel):
 @router.get("", response_model=List[GameOut])
 def list_games(
     month: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
     _: models.User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     query = db.query(models.Game)
-    if month:
+    if start_date and end_date:
+        query = query.filter(
+            models.Game.date >= start_date,
+            models.Game.date <= end_date,
+        )
+    elif month:
         try:
             year, mon = map(int, month.split("-"))
             from sqlalchemy import extract
@@ -54,12 +61,24 @@ def list_games(
     return query.order_by(models.Game.date, models.Game.start_time).all()
 
 
+def _normalize_uid(uid: str) -> str:
+    """Normalize an iCal UID to a consistent form for reliable matching."""
+    return uid.strip()
+
+
 def _fetch_and_import_feed(
     url: str,
     division: models.Division,
     db: Session,
 ) -> tuple[int, int]:
-    """Fetch a single iCal feed and upsert its games, assigning *division* to every event."""
+    """Fetch a single iCal feed and upsert its games, assigning *division* to every event.
+
+    Matching strategy:
+    1. Exact match on normalized external_uid.
+    2. Fallback: match on (date, start_time, division) in case the provider
+       generates non-stable UIDs between fetches.
+    When a fallback match is found the stored uid is updated to the new value.
+    """
     try:
         url = url.replace("webcal://", "https://")
         resp = httpx.get(url, timeout=30)
@@ -75,7 +94,7 @@ def _fetch_and_import_feed(
         if component.name != "VEVENT":
             continue
 
-        uid = str(component.get("UID", ""))
+        uid = _normalize_uid(str(component.get("UID", "")))
         if not uid:
             continue
 
@@ -101,8 +120,19 @@ def _fetch_and_import_feed(
             if hasattr(dt_end, "time"):
                 game_end = dt_end.time()
 
+        # Primary lookup: by normalized external_uid
         existing = db.query(models.Game).filter(models.Game.external_uid == uid).first()
+
+        # Fallback lookup: by (date, start_time, division) for unstable-UID providers
+        if not existing:
+            existing = db.query(models.Game).filter(
+                models.Game.date == game_date,
+                models.Game.start_time == game_start,
+                models.Game.division == division,
+            ).first()
+
         if existing:
+            existing.external_uid = uid
             existing.title = summary
             existing.division = division
             existing.date = game_date
