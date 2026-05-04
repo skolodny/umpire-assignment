@@ -158,8 +158,19 @@ export default function AvailabilityTab() {
   }, [currentMonth]);
 
   useEffect(() => {
-    fetchSlots();
-  }, [fetchSlots]);
+    let cancelled = false;
+
+    const load = async () => {
+      const r = await getAvailability(undefined, currentMonth);
+      if (!cancelled) setSlots(r.data);
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentMonth]);
 
   const slotsForDate = selectedDate
     ? slots.filter((s) => s.date === selectedDate)
@@ -213,7 +224,6 @@ export default function AvailabilityTab() {
       toast.close(loadingId);
       toast.danger("Failed to delete availability slot", { description: "Please try again" });
     }
-    await deleteSlot(id);
     await fetchSlots();
   };
 
