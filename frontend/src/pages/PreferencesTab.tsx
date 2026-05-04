@@ -66,7 +66,7 @@ export default function PreferencesTab() {
     setSaved(true);
   };
 
-  if (loading) return <Spinner size='xl' />;
+  if (loading) return <Spinner size='lg' />;
 
   return (
     <div className="flex flex-col gap-4">

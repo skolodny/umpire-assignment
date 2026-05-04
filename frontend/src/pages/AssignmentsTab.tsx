@@ -67,7 +67,7 @@ export default function AssignmentsTab() {
 
   const pendingCount = assignments.filter((a) => a.status === "pending").length;
 
-  if (loading) return <Spinner size='xl' />;
+  if (loading) return <Spinner size='lg' />;
 
   return (
     <div className="flex flex-col gap-4">

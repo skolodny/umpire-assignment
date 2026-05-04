@@ -26,7 +26,7 @@ export default function AdminUmpiresTab() {
     });
   }, []);
 
-  if (loading) return <Spinner size='xl' />;
+  if (loading) return <Spinner size='lg' />;
 
   return (
     <div className="flex flex-col gap-4">
