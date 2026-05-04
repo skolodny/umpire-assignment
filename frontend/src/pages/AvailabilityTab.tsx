@@ -9,7 +9,6 @@ import { format } from "date-fns";
 import type { EventImpl } from "@fullcalendar/core/internal";
 import { Button, Modal, toast } from "@heroui/react";
 import { TrashBin, FloppyDisk, Plus } from "@gravity-ui/icons";
-import type { AxiosError } from "axios";
 
 interface Slot {
   id: number;
