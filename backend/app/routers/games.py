@@ -134,6 +134,7 @@ def sync_games(
     _: models.User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
+    '''Fetch games from configured iCal feeds and upsert into the database.'''
     if not any([
         settings.ical_feed_url_int_i,
         settings.ical_feed_url_rookies,
