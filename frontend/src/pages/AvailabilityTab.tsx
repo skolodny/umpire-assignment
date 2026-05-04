@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { DateClickArg } from "@fullcalendar/interaction";
 import type { DatesSetArg, EventClickArg } from "@fullcalendar/core";
-import { getAvailability, createSlot, deleteSlot, editSlot } from "../api";
+import { getAvailability, createSlot, deleteSlot, editSlot, listAssignments } from "../api";
 import { format } from "date-fns";
 import type { EventImpl } from "@fullcalendar/core/internal";
 import { Button, Modal, toast } from "@heroui/react";
@@ -16,6 +17,24 @@ interface Slot {
   date: string;
   start_time: string;
   end_time: string;
+}
+
+interface Assignment {
+  id: number;
+  game_id: number;
+  umpire_id: number;
+  status: string;
+  assigned_at: string;
+  responded_at: string | null;
+  game: {
+    id: number;
+    title: string;
+    date: string;
+    start_time: string;
+    end_time: string | null;
+    location: string | null;
+    division: string | null;
+  };
 }
 
 interface SlotModalProps {
@@ -146,23 +165,37 @@ function EditModal({ event, onClose, onSave, onDelete }: { event: EventImpl; onC
   );
 }
 
+const AVAILABILITY_COLOR = "#22c55e";
+const ASSIGNMENT_ACCEPTED_COLOR = "#3b82f6";
+const ASSIGNMENT_PENDING_COLOR = "#f59e0b";
+const ASSIGNMENT_OTHER_COLOR = "#9ca3af";
+
 export default function AvailabilityTab() {
   const [slots, setSlots] = useState<Slot[]>([]);
-  const [currentMonth, setCurrentMonth] = useState(format(new Date(), "yyyy-MM"));
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventImpl | null>(null);
 
   const fetchSlots = useCallback(async () => {
-    const r = await getAvailability(undefined, currentMonth);
+    if (!dateRange) return;
+    const r = await getAvailability(undefined, undefined, dateRange.start, dateRange.end);
     setSlots(r.data);
-  }, [currentMonth]);
+  }, [dateRange]);
 
   useEffect(() => {
     let cancelled = false;
+    if (!dateRange) return;
 
     const load = async () => {
-      const r = await getAvailability(undefined, currentMonth);
-      if (!cancelled) setSlots(r.data);
+      const [slotsRes, assignmentsRes] = await Promise.all([
+        getAvailability(undefined, undefined, dateRange.start, dateRange.end),
+        listAssignments(),
+      ]);
+      if (!cancelled) {
+        setSlots(slotsRes.data);
+        setAssignments(assignmentsRes.data);
+      }
     };
 
     load();
@@ -170,31 +203,51 @@ export default function AvailabilityTab() {
     return () => {
       cancelled = true;
     };
-  }, [currentMonth]);
+  }, [dateRange]);
 
   const slotsForDate = selectedDate
     ? slots.filter((s) => s.date === selectedDate)
     : [];
 
-  // Include start_time/end_time in extendedProps so EditModal can use actual times
-  const calendarEvents = slots.map((s) => ({
+  // Availability slots (green)
+  const availabilityEvents = slots.map((s) => ({
     id: String(s.id),
-    title: `${s.start_time.slice(0, 5)}–${s.end_time.slice(0, 5)}`,
+    title: `Available: ${s.start_time.slice(0, 5)}–${s.end_time.slice(0, 5)}`,
     date: s.date,
-    color: "#22c55e",
-    extendedProps: { start_time: s.start_time, end_time: s.end_time },
+    color: AVAILABILITY_COLOR,
+    extendedProps: { kind: "availability", start_time: s.start_time, end_time: s.end_time },
   }));
+
+  // Assigned games overlay
+  const assignmentEvents = assignments.map((a) => {
+    const isAccepted = a.status === "accepted";
+    const isPending = a.status === "pending";
+    const color = isAccepted ? ASSIGNMENT_ACCEPTED_COLOR : isPending ? ASSIGNMENT_PENDING_COLOR : ASSIGNMENT_OTHER_COLOR;
+    return {
+      id: `assignment-${a.id}`,
+      title: `Game: ${a.game.title}`,
+      date: a.game.date,
+      color,
+      extendedProps: { kind: "assignment", status: a.status },
+    };
+  });
+
+  const calendarEvents = [...availabilityEvents, ...assignmentEvents];
 
   const handleDateClick = (info: DateClickArg) => {
     setSelectedDate(info.dateStr);
   };
 
   const handleEventClick = (info: EventClickArg) => {
-    setSelectedEvent(info.event);
+    if (info.event.extendedProps.kind === "availability") {
+      setSelectedEvent(info.event);
+    }
   };
 
   const handleDatesSet = (info: DatesSetArg) => {
-    setCurrentMonth(format(info.view.currentStart, "yyyy-MM"));
+    const start = format(info.view.activeStart, "yyyy-MM-dd");
+    const end = format(info.view.activeEnd, "yyyy-MM-dd");
+    setDateRange({ start, end });
   };
 
   const handleSaveSlot = async (start: string, end: string) => {
@@ -247,9 +300,28 @@ export default function AvailabilityTab() {
     <div className="flex flex-col gap-4">
       <h2 className="text-xl font-semibold">My Availability</h2>
       <p className="text-sm text-slate-500">Click a day to add or remove availability windows.</p>
+      <div className="flex gap-4 flex-wrap mb-1">
+        <span className="flex items-center gap-1.5 text-sm text-slate-500">
+          <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: AVAILABILITY_COLOR }} />
+          Available
+        </span>
+        <span className="flex items-center gap-1.5 text-sm text-slate-500">
+          <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: ASSIGNMENT_ACCEPTED_COLOR }} />
+          Assigned (accepted)
+        </span>
+        <span className="flex items-center gap-1.5 text-sm text-slate-500">
+          <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: ASSIGNMENT_PENDING_COLOR }} />
+          Assigned (pending)
+        </span>
+      </div>
       <FullCalendar
-        plugins={[dayGridPlugin, interactionPlugin]}
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
+        headerToolbar={{
+          left: "prev,next today",
+          center: "title",
+          right: "dayGridMonth,timeGridWeek,timeGridDay",
+        }}
         events={calendarEvents}
         eventClick={handleEventClick}
         dateClick={handleDateClick}

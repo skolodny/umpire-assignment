@@ -18,8 +18,8 @@ api.interceptors.request.use((config) => {
 export const getMe = () => api.get("/auth/me");
 
 // Availability
-export const getAvailability = (userId?: number, month?: string) =>
-  api.get("/availability", { params: { user_id: userId, month } });
+export const getAvailability = (userId?: number, month?: string, startDate?: string, endDate?: string) =>
+  api.get("/availability", { params: { user_id: userId, month, start_date: startDate, end_date: endDate } });
 
 export const createSlot = (data: { date: string; start_time: string; end_time: string }) =>
   api.post("/availability", data);
@@ -35,8 +35,8 @@ export const setPreferences = (divisions: string[]) =>
   api.put("/preferences", { divisions });
 
 // Games (admin)
-export const listGames = (month?: string) =>
-  api.get("/games", { params: { month } });
+export const listGames = (startDate?: string, endDate?: string) =>
+  api.get("/games", { params: { start_date: startDate, end_date: endDate } });
 
 export const syncGames = () => api.post("/games/sync");
 

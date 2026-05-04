@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { EventClickArg, DatesSetArg } from "@fullcalendar/core";
 import { listGames, syncGames, getEligibleUmpires, createAssignment } from "../api";
@@ -32,7 +33,7 @@ const DIVISION_COLORS: Record<string, string> = {
 
 export default function AdminGamesTab() {
   const [games, setGames] = useState<Game[]>([]);
-  const [currentMonth, setCurrentMonth] = useState(format(new Date(), "yyyy-MM"));
+  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [eligibleUmpires, setEligibleUmpires] = useState<EligibleUmpire[]>([]);
   const [selectedUmpireId, setSelectedUmpireId] = useState<number | null>(null);
@@ -41,9 +42,10 @@ export default function AdminGamesTab() {
   const [successMsg, setSuccessMsg] = useState("");
 
   const fetchGames = useCallback(async () => {
-    const r = await listGames(currentMonth);
+    if (!dateRange) return;
+    const r = await listGames(dateRange.start, dateRange.end);
     setGames(r.data);
-  }, [currentMonth]);
+  }, [dateRange]);
 
   useEffect(() => {
     fetchGames();
@@ -119,11 +121,20 @@ export default function AdminGamesTab() {
         ))}
       </div>
       <FullCalendar
-        plugins={[dayGridPlugin, interactionPlugin]}
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
+        headerToolbar={{
+          left: "prev,next today",
+          center: "title",
+          right: "dayGridMonth,timeGridWeek,timeGridDay",
+        }}
         events={calendarEvents}
         eventClick={handleGameClick}
-        datesSet={(info: DatesSetArg) => setCurrentMonth(format(info.view.currentStart, "yyyy-MM"))}
+        datesSet={(info: DatesSetArg) => {
+          const start = format(info.view.activeStart, "yyyy-MM-dd");
+          const end = format(info.view.activeEnd, "yyyy-MM-dd");
+          setDateRange({ start, end });
+        }}
         height="auto"
       />
 
