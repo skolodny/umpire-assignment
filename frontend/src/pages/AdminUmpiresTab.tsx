@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { listUmpires } from "../api";
-import { Chip, Spinner } from "@heroui/react";
+import { Chip, ProgressBar, Label } from "@heroui/react";
 
 interface Umpire {
   id: number;
@@ -26,7 +26,14 @@ export default function AdminUmpiresTab() {
     });
   }, []);
 
-  if (loading) return <Spinner size='sm' />;
+    if (loading) return (
+      <ProgressBar isIndeterminate aria-label="Loading" className="w-64">
+        <Label>Loading...</Label>
+        <ProgressBar.Track>
+          <ProgressBar.Fill />
+        </ProgressBar.Track>
+      </ProgressBar>
+    );
 
   return (
     <div className="flex flex-col gap-4">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getPreferences, setPreferences } from "../api";
-import { Button, Checkbox, Spinner } from "@heroui/react";
+import { Button, Checkbox, ProgressBar, Label } from "@heroui/react";
 
 type Division = "rookies" | "int_i" | "int_ii";
 
@@ -66,7 +66,14 @@ export default function PreferencesTab() {
     setSaved(true);
   };
 
-  if (loading) return <Spinner size='sm' />;
+    if (loading) return (
+      <ProgressBar isIndeterminate aria-label="Loading" className="w-64">
+        <Label>Loading...</Label>
+        <ProgressBar.Track>
+          <ProgressBar.Fill />
+        </ProgressBar.Track>
+      </ProgressBar>
+    );
 
   return (
     <div className="flex flex-col gap-4">
