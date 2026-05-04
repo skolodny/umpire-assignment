@@ -11,7 +11,10 @@ interface Props {
 export default function ProtectedRoute({ children, adminOnly = false }: Props) {
   const { user, loading } = useAuth();
 
-  if (loading) return <Spinner size='sm' />;
+  if (loading) return     
+  (<div className="flex items-center gap-4">
+    <Spinner />
+  </div>);
   if (!user) return <Navigate to="/login" replace />;
   if (adminOnly && user.role !== "admin") return <Navigate to="/dashboard" replace />;
 
