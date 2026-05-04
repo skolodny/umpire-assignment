@@ -43,8 +43,6 @@ def upgrade() -> None:
         sa.Column("start_time", sa.Time(), nullable=False),
         sa.Column("end_time", sa.Time(), nullable=True),
         sa.Column("location", sa.String(), nullable=True),
-        sa.Column("home_team", sa.String(), nullable=True),
-        sa.Column("away_team", sa.String(), nullable=True),
         sa.Column("imported_at", sa.DateTime(timezone=True), server_default=sa.func.now()), # pylint: disable=not-callable
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("external_uid"),

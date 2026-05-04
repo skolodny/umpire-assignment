@@ -23,8 +23,6 @@ class GameOut(BaseModel):
     start_time: time
     end_time: Optional[time]
     location: Optional[str]
-    home_team: Optional[str]
-    away_team: Optional[str]
 
     class Config:
         from_attributes = True

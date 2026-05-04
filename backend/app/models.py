@@ -98,8 +98,6 @@ class Game(Base):
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=True)
     location = Column(String, nullable=True)
-    home_team = Column(String, nullable=True)
-    away_team = Column(String, nullable=True)
     imported_at = Column(DateTime(timezone=True), server_default=func.now())
 
     assignments = relationship("Assignment", back_populates="game", cascade="all, delete-orphan")
