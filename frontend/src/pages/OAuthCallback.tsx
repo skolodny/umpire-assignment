@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { getMe } from "../api";
 import { useAuth } from "../context/AuthContext";
+import { ProgressBar, Label } from "@heroui/react";
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
@@ -64,7 +65,12 @@ export default function OAuthCallback() {
     <div className="auth-container">
       <div className="auth-card">
         <h1>Umpire Assignment</h1>
-        <div className="loading">Completing sign in…</div>
+        <ProgressBar isIndeterminate aria-label="Completing sign in" className="w-64">
+          <Label>Completing sign in…</Label>
+          <ProgressBar.Track>
+            <ProgressBar.Fill />
+          </ProgressBar.Track>
+        </ProgressBar>
       </div>
     </div>
   );
