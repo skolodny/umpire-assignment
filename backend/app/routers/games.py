@@ -63,7 +63,7 @@ def list_games(
 
 def _normalize_uid(uid: str) -> str:
     """Normalize an iCal UID to a consistent form for reliable matching."""
-    return uid.strip()
+    return uid.strip().lower()
 
 
 def _fetch_and_import_feed(
@@ -130,6 +130,11 @@ def _fetch_and_import_feed(
                 models.Game.start_time == game_start,
                 models.Game.division == division,
             ).first()
+            if existing:
+                print(
+                    f"[SYNC] Fallback match for UID={uid!r}: matched existing game id={existing.id} "
+                    f"(stored uid={existing.external_uid!r}) by date+start_time+division"
+                )
 
         if existing:
             existing.external_uid = uid

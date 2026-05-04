@@ -165,6 +165,11 @@ function EditModal({ event, onClose, onSave, onDelete }: { event: EventImpl; onC
   );
 }
 
+const AVAILABILITY_COLOR = "#22c55e";
+const ASSIGNMENT_ACCEPTED_COLOR = "#3b82f6";
+const ASSIGNMENT_PENDING_COLOR = "#f59e0b";
+const ASSIGNMENT_OTHER_COLOR = "#9ca3af";
+
 export default function AvailabilityTab() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -209,18 +214,18 @@ export default function AvailabilityTab() {
     id: String(s.id),
     title: `Available: ${s.start_time.slice(0, 5)}–${s.end_time.slice(0, 5)}`,
     date: s.date,
-    color: "#22c55e",
+    color: AVAILABILITY_COLOR,
     extendedProps: { kind: "availability", start_time: s.start_time, end_time: s.end_time },
   }));
 
-  // Assigned games (blue for pending/accepted, gray for declined/expired)
+  // Assigned games overlay
   const assignmentEvents = assignments.map((a) => {
-    const isPending = a.status === "pending";
     const isAccepted = a.status === "accepted";
-    const color = isAccepted ? "#3b82f6" : isPending ? "#f59e0b" : "#9ca3af";
+    const isPending = a.status === "pending";
+    const color = isAccepted ? ASSIGNMENT_ACCEPTED_COLOR : isPending ? ASSIGNMENT_PENDING_COLOR : ASSIGNMENT_OTHER_COLOR;
     return {
       id: `assignment-${a.id}`,
-      title: `🎮 ${a.game.title}`,
+      title: `Game: ${a.game.title}`,
       date: a.game.date,
       color,
       extendedProps: { kind: "assignment", status: a.status },
@@ -297,15 +302,15 @@ export default function AvailabilityTab() {
       <p className="text-sm text-slate-500">Click a day to add or remove availability windows.</p>
       <div className="flex gap-4 flex-wrap mb-1">
         <span className="flex items-center gap-1.5 text-sm text-slate-500">
-          <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: "#22c55e" }} />
+          <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: AVAILABILITY_COLOR }} />
           Available
         </span>
         <span className="flex items-center gap-1.5 text-sm text-slate-500">
-          <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: "#3b82f6" }} />
+          <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: ASSIGNMENT_ACCEPTED_COLOR }} />
           Assigned (accepted)
         </span>
         <span className="flex items-center gap-1.5 text-sm text-slate-500">
-          <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: "#f59e0b" }} />
+          <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: ASSIGNMENT_PENDING_COLOR }} />
           Assigned (pending)
         </span>
       </div>
