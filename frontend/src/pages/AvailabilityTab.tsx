@@ -223,7 +223,7 @@ export default function AvailabilityTab() {
     setSelectedEvent(null);
     const loadingId = toast("Saving changes...", { isLoading: true, timeout: 0});
     try {
-    await editSlot(slotId, { start_time: start, end_time: end });
+      await editSlot(slotId, { start_time: start, end_time: end });
       toast.close(loadingId);
       toast.success("Availability slot updated");
     } catch {
