@@ -7,8 +7,10 @@ import type { DatesSetArg, EventClickArg } from "@fullcalendar/core";
 import { getAvailability, createSlot, deleteSlot, editSlot } from "../api";
 import { format } from "date-fns";
 import type { EventImpl } from "@fullcalendar/core/internal";
-import { Button, Modal, toast } from "@heroui/react";
+import type { TimeValue } from '@heroui/react';
+import { Button, Modal, toast, TimeField, Label, FieldError } from "@heroui/react";
 import { TrashBin, FloppyDisk, Plus } from "@gravity-ui/icons";
+import { parseTime } from '@internationalized/date';
 
 interface Slot {
   id: number;
@@ -26,9 +28,13 @@ interface SlotModalProps {
   onDelete: (id: number) => void;
 }
 
+// Convert Time object → "HH:mm" string
+const toTimeString = (val: TimeValue) =>
+  `${String(val.hour).padStart(2, '0')}:${String(val.minute).padStart(2, '0')}`;
+
 function SlotModal({ date, slots, onClose, onSave, onDelete }: SlotModalProps) {
-  const [start, setStart] = useState("09:00");
-  const [end, setEnd] = useState("17:00");
+  const [start, setStart] = useState<TimeValue>(parseTime("09:00"));
+  const [end, setEnd] = useState<TimeValue>(parseTime("17:00"));
   const [error, setError] = useState("");
 
   const handleAdd = () => {
@@ -37,7 +43,7 @@ function SlotModal({ date, slots, onClose, onSave, onDelete }: SlotModalProps) {
       return;
     }
     setError("");
-    onSave(start, end);
+    onSave(toTimeString(start), toTimeString(end));
   };
 
   return (
@@ -59,20 +65,26 @@ function SlotModal({ date, slots, onClose, onSave, onDelete }: SlotModalProps) {
                 ))}
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">Start</label>
-                <input
-                  type="time"
+                <TimeField
                   value={start}
-                  onChange={(e) => setStart(e.target.value)}
-                  className="px-2 py-1.5 border border-slate-300 rounded-lg text-sm"
-                />
-                <label className="text-sm font-medium">End</label>
-                <input
-                  type="time"
+                  onChange={(val) => val && setStart(val)}>
+                  <Label>Start Time</Label>
+                  <TimeField.Group>
+                    <TimeField.Input>
+                      {(segment) => <TimeField.Segment segment={segment} />}
+                    </TimeField.Input>
+                  </TimeField.Group>
+                </TimeField>
+                <TimeField
                   value={end}
-                  onChange={(e) => setEnd(e.target.value)}
-                  className="px-2 py-1.5 border border-slate-300 rounded-lg text-sm"
-                />
+                  onChange={(val) => val && setEnd(val)}>
+                  <Label>End Time</Label>
+                  <TimeField.Group>
+                    <TimeField.Input>
+                      {(segment) => <TimeField.Segment segment={segment} />}
+                    </TimeField.Input>
+                  </TimeField.Group>
+                </TimeField>
                 {error && (
                   <div className="bg-red-50 text-red-600 p-2 rounded-lg text-sm">{error}</div>
                 )}
@@ -92,8 +104,8 @@ function EditModal({ event, onClose, onSave, onDelete }: { event: EventImpl; onC
   // BUG FIX: Use extendedProps (which carry the actual slot times) instead of
   // event.start / event.end (which are calendar Date objects at midnight for all-day events)
   const props = event.extendedProps as { start_time?: string; end_time?: string };
-  const [start, setStart] = useState(props.start_time?.slice(0, 5) ?? "09:00");
-  const [end, setEnd] = useState(props.end_time?.slice(0, 5) ?? "17:00");
+  const [start, setStart] = useState<TimeValue>(parseTime(props.start_time?.slice(0, 5) ?? "09:00"));
+  const [end, setEnd] = useState<TimeValue>(parseTime(props.end_time?.slice(0, 5) ?? "17:00"));
   const [error, setError] = useState("");
 
   const handleUpdate = () => {
@@ -102,7 +114,7 @@ function EditModal({ event, onClose, onSave, onDelete }: { event: EventImpl; onC
       return;
     }
     setError("");
-    onSave(start, end);
+    onSave(toTimeString(start), toTimeString(end));
   };
 
   return (
@@ -117,23 +129,28 @@ function EditModal({ event, onClose, onSave, onDelete }: { event: EventImpl; onC
               </Modal.Heading>
             </Modal.Header>
             <Modal.Body className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Start</label>
-              <input
-                type="time"
-                value={start}
-                onChange={(e) => setStart(e.target.value)}
-                className="px-2 py-1.5 border border-slate-300 rounded-lg text-sm"
-              />
-              <label className="text-sm font-medium">End</label>
-              <input
-                type="time"
+                <TimeField
+                  value={start}
+                  onChange={(val) => val && setStart(val)}>
+                  <Label>Start Time</Label>
+                  <TimeField.Group>
+                    <TimeField.Input>
+                      {(segment) => <TimeField.Segment segment={segment} />}
+                    </TimeField.Input>
+                  </TimeField.Group>
+                </TimeField>
+              <TimeField
                 value={end}
-                onChange={(e) => setEnd(e.target.value)}
-                className="px-2 py-1.5 border border-slate-300 rounded-lg text-sm"
-              />
-              {error && (
-                <div className="bg-red-50 text-red-600 p-2 rounded-lg text-sm">{error}</div>
-              )}
+                isInvalid={!!error}
+                onChange={(val) => val && setEnd(val)}>
+                <Label>End Time</Label>
+                <TimeField.Group>
+                  <TimeField.Input>
+                    {(segment) => <TimeField.Segment segment={segment} />}
+                  </TimeField.Input>
+                </TimeField.Group>
+                <FieldError className="bg-red-50 text-red-600 p-2 rounded-lg text-sm">{error}</FieldError>
+              </TimeField>
             </Modal.Body>
             <Modal.Footer className="flex gap-2 justify-end">
               <Button isIconOnly variant="primary" onPress={handleUpdate}><FloppyDisk /></Button>
