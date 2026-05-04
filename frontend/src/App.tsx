@@ -11,10 +11,12 @@ import PreferencesTab from "./pages/PreferencesTab";
 import AssignmentsTab from "./pages/AssignmentsTab";
 import AdminGamesTab from "./pages/AdminGamesTab";
 import AdminUmpiresTab from "./pages/AdminUmpiresTab";
+import { Toast } from '@heroui/react'
 
 export default function App() {
   return (
     <AuthProvider>
+      <Toast.Provider placement='top' />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<Navigate to="/login" replace />} />
