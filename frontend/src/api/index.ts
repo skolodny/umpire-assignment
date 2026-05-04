@@ -60,3 +60,6 @@ export const getIcalUrl = (assignmentId: number) =>
 
 // Umpires (admin)
 export const listUmpires = () => api.get("/umpires");
+
+// Health check
+export const checkHealth = () => api.get("/health");
