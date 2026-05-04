@@ -190,7 +190,7 @@ export default function AvailabilityTab() {
     if (!selectedDate) return;
     const date = selectedDate;
     setSelectedDate(null);
-    const loadingId = toast("Saving changes...", { isLoading: true, timeout: 0});
+    const loadingId = toast("Saving changes...", { isLoading: true, timeout: 0, });
     try {
       await createSlot({ date, start_time: start, end_time: end });
       toast.close(loadingId);
