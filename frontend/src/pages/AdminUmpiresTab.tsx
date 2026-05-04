@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { listUmpires } from "../api";
-import { Chip } from "@heroui/react";
+import { Chip, Spinner } from "@heroui/react";
 
 interface Umpire {
   id: number;
@@ -26,7 +26,7 @@ export default function AdminUmpiresTab() {
     });
   }, []);
 
-  if (loading) return <div className="p-6 text-slate-500">Loading…</div>;
+  if (loading) return <Spinner size='xl' />;
 
   return (
     <div className="flex flex-col gap-4">

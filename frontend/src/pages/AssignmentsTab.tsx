@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { listAssignments, respondToAssignment, respondByToken, getIcalUrl } from "../api";
-import { Button, Card, Chip } from "@heroui/react";
+import { Button, Card, Chip, Spinner } from "@heroui/react";
 
 interface Assignment {
   id: number;
@@ -67,7 +67,7 @@ export default function AssignmentsTab() {
 
   const pendingCount = assignments.filter((a) => a.status === "pending").length;
 
-  if (loading) return <div className="p-6 text-slate-500">Loading…</div>;
+  if (loading) return <Spinner size='xl' />;
 
   return (
     <div className="flex flex-col gap-4">

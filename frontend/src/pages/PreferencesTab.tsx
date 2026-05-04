@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getPreferences, setPreferences } from "../api";
-import { Button, Checkbox } from "@heroui/react";
+import { Button, Checkbox, Spinner } from "@heroui/react";
 
 type Division = "rookies" | "int_i" | "int_ii";
 
@@ -66,7 +66,7 @@ export default function PreferencesTab() {
     setSaved(true);
   };
 
-  if (loading) return <div className="p-6 text-slate-500">Loading…</div>;
+  if (loading) return <Spinner size='xl' />;
 
   return (
     <div className="flex flex-col gap-4">
